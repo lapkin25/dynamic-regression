@@ -216,7 +216,7 @@ function R2 = test_dynamic_coef_t (data, test_data)
         xx = data(:, i);
         yy = data(:, j);
         a = ainit;
-        for t = 1:length(xx)-1
+        for t = 1:length(xx)  # без -1
           a = alpha * a * xx(t) + a0;
         endfor
         ainit_new = a;
