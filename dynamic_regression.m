@@ -249,8 +249,8 @@ endfunction
 
 #years_range = 43:50;
 
-start_year_ind = 42;  # 36;
-years_range_len = 8;  #10;
+start_year_ind = 38;  # 36;
+years_range_len = 10;  #10;
 test_years_range_len = 1;
 
 years_range = start_year_ind : start_year_ind + years_range_len - 1;
@@ -270,6 +270,7 @@ data = data1
 
 fixed_point_format(true)
 
+#r = corrcoef(data)
 
 #{
 # корреляционная матрица
@@ -287,8 +288,8 @@ R2_t = dynamic_coef_t(data)
 
 
 
-i = 1  #3
-j = 22  #8
+i = 5  #3
+j = 7  #8
 #kk = 17 # 4 или 13
 x = data(:, i);
 y = data(:, j);
@@ -437,10 +438,10 @@ R2_t_mean = (R2_t_stat{1} + R2_t_stat{2} + R2_t_stat{3} + R2_t_stat{4} + R2_t_st
 #}
 
 
-
+#{
 # второй этап вычислений
 cnt = 1;
-for start_year_ind = 36:38
+for start_year_ind = 38:40
   years_range_len = 10;
   test_years_range_len = 3;
 
@@ -470,4 +471,5 @@ R2_mean = (R2_stat{1} + R2_stat{2} + R2_stat{3}) / 3
 R2_t_mean = (R2_t_stat{1} + R2_t_stat{2} + R2_t_stat{3}) / 3
 R2_test_mean = (R2_test_stat{1} + R2_test_stat{2} + R2_test_stat{3}) / 3;
 R2_test_mean(R2_test_mean < 0) = 0
+#}
 
