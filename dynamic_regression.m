@@ -166,6 +166,7 @@ function R2 = dynamic_coef (data)
       if (i == j)
         R2(i, j) = 0;
       else
+        printf("%d %d\n", i, j);
         [R2(i, j), a, b, c] = dynamic_model(data(:, i), data(:, j));
       endif
     endfor
@@ -181,6 +182,7 @@ function R2 = dynamic_coef_t (data)
       if (i == j)
         R2(i, j) = 0;
       else
+        printf("%d %d\n", i, j);
         [R2(i, j), coeff_alpha, coeff_a0, coeff_ainit, coeff_b, coeff_c] = dynamic_model_t(data(:, i), data(:, j));
       endif
     endfor
@@ -196,6 +198,7 @@ function R2 = test_dynamic_coef (data, test_data)
       if (i == j)
         R2(i, j) = 0;
       else
+        printf("t %d %d\n", i, j);
         [R2_, a, b, c] = dynamic_model(data(:, i), data(:, j));
         R2(i, j) = test_R2(test_data(:, i), test_data(:, j), a, b, c);
       endif
@@ -212,6 +215,7 @@ function R2 = test_dynamic_coef_t (data, test_data)
       if (i == j)
         R2(i, j) = 0;
       else
+        printf("t %d %d\n", i, j);
         [R2_, alpha, a0, ainit, b, c] = dynamic_model_t(data(:, i), data(:, j));
         xx = data(:, i);
         yy = data(:, j);
@@ -288,8 +292,8 @@ R2_t = dynamic_coef_t(data)
 
 
 
-i = 5  #3
-j = 7  #8
+i = 27  #3
+j = 10  #8
 #kk = 17 # 4 или 13
 x = data(:, i);
 y = data(:, j);
@@ -441,7 +445,7 @@ R2_t_mean = (R2_t_stat{1} + R2_t_stat{2} + R2_t_stat{3} + R2_t_stat{4} + R2_t_st
 #{
 # второй этап вычислений
 cnt = 1;
-for start_year_ind = 38:40
+for start_year_ind = 36:38
   years_range_len = 10;
   test_years_range_len = 3;
 
@@ -470,6 +474,6 @@ endfor
 R2_mean = (R2_stat{1} + R2_stat{2} + R2_stat{3}) / 3
 R2_t_mean = (R2_t_stat{1} + R2_t_stat{2} + R2_t_stat{3}) / 3
 R2_test_mean = (R2_test_stat{1} + R2_test_stat{2} + R2_test_stat{3}) / 3;
-R2_test_mean(R2_test_mean < 0) = 0
+R2_t_test_mean = (R2_t_test_stat{1} + R2_t_test_stat{2} + R2_t_test_stat{3}) / 3;
+R2_t_test_mean(R2_t_test_mean < 0) = 0
 #}
-
