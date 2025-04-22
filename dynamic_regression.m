@@ -28,22 +28,26 @@ series_num = rows - 1;  # количество временных рядов
 #   в каждом столбце - отдельный временной ряд
 
 # R^2 на тестовой выборке
-function R2 = test_R2 (x, y, coeff_a, coeff_b, coeff_c)
+function [R2, MAE] = test_R2 (x, y, coeff_a, coeff_b, coeff_c)
   n = length(x);
   R2 = 1 - (1 / (n - 1) * sum((x(2:n) - (coeff_a * x(1:n-1) + coeff_b * y(1:n-1) + coeff_c)) .^ 2)) ...
     / (1 / n * sum((x - mean(x)) .^ 2));
+  MAE = mean(abs(x(2:n) - (coeff_a * x(1:n-1) + coeff_b * y(1:n-1) + coeff_c)));
 endfunction
 
 # R^2 на тестовой выборке
-function R2 = test_R2_t (x, y, coeff_alpha, coeff_a0, coeff_ainit, coeff_b, coeff_c)
+function [R2, MAE] = test_R2_t (x, y, coeff_alpha, coeff_a0, coeff_ainit, coeff_b, coeff_c)
   n = length(x);
   a = coeff_ainit;
   s = 0;
+  s1 = 0;
   for t = 1:n-1
     s = s + (x(t + 1) - (a * x(t) + coeff_b * y(t) + coeff_c)) ^ 2;
+    s1 = s1 + abs(x(t + 1) - (a * x(t) + coeff_b * y(t) + coeff_c));
     a = coeff_alpha * a * x(t) + coeff_a0;
   endfor
   R2 = 1 - (1 / (n - 1) * s) / (1 / n * sum((x - mean(x)) .^ 2));
+  MAE = s1 / (n - 1);
 endfunction
 
 function [R2, coeff_a, coeff_b, coeff_c] = dynamic_model (x, y)
@@ -189,10 +193,11 @@ function R2 = dynamic_coef_t (data)
   endfor
 endfunction
 
-function R2 = test_dynamic_coef (data, test_data)
+function [R2, MAE] = test_dynamic_coef (data, test_data)
   n = columns(data);  # число рядов с данными
   data_size = rows(data);  # длина рядов
   R2 = zeros(n);
+  MAE = zeros(n);
   for i = 1:n
     for j = 1:n
       if (i == j)
@@ -200,16 +205,17 @@ function R2 = test_dynamic_coef (data, test_data)
       else
         printf("t %d %d\n", i, j);
         [R2_, a, b, c] = dynamic_model(data(:, i), data(:, j));
-        R2(i, j) = test_R2(test_data(:, i), test_data(:, j), a, b, c);
+        [R2(i, j), MAE(i, j)] = test_R2(test_data(:, i), test_data(:, j), a, b, c);
       endif
     endfor
   endfor
 endfunction
 
-function R2 = test_dynamic_coef_t (data, test_data)
+function [R2, MAE] = test_dynamic_coef_t (data, test_data)
   n = columns(data);  # число рядов с данными
   data_size = rows(data);  # длина рядов
   R2 = zeros(n);
+  MAE = zeros(n);
   for i = 1:n
     for j = 1:n
       if (i == j)
@@ -224,7 +230,7 @@ function R2 = test_dynamic_coef_t (data, test_data)
           a = alpha * a * xx(t) + a0;
         endfor
         ainit_new = a;
-        R2(i, j) = test_R2_t(test_data(:, i), test_data(:, j), alpha, a0, ainit_new, b, c);
+        [R2(i, j), MAE(i, j)] = test_R2_t(test_data(:, i), test_data(:, j), alpha, a0, ainit_new, b, c);
       endif
     endfor
   endfor
@@ -447,7 +453,7 @@ R2_t_mean = (R2_t_stat{1} + R2_t_stat{2} + R2_t_stat{3} + R2_t_stat{4} + R2_t_st
 cnt = 1;
 for start_year_ind = 36:38
   years_range_len = 10;
-  test_years_range_len = 3;
+  test_years_range_len = 4;
 
   years_range = start_year_ind : start_year_ind + years_range_len - 1;
   test_years_range = start_year_ind + years_range_len : start_year_ind + years_range_len + test_years_range_len - 1;
@@ -460,8 +466,8 @@ for start_year_ind = 36:38
   # корреляционная матрица
   R2_stat{cnt} = dynamic_coef(data);
   R2_t_stat{cnt} = dynamic_coef_t(data);
-  R2_test_stat{cnt} = test_dynamic_coef(data, test_data);
-  R2_t_test_stat{cnt} = test_dynamic_coef_t(data, test_data);
+  [R2_test_stat{cnt}, MAE_test_stat{cnt}] = test_dynamic_coef(data, test_data);
+  [R2_t_test_stat{cnt}, MAE_t_test_stat{cnt}] = test_dynamic_coef_t(data, test_data);
   cnt += 1;
 endfor
 
@@ -476,4 +482,6 @@ R2_t_mean = (R2_t_stat{1} + R2_t_stat{2} + R2_t_stat{3}) / 3
 R2_test_mean = (R2_test_stat{1} + R2_test_stat{2} + R2_test_stat{3}) / 3;
 R2_t_test_mean = (R2_t_test_stat{1} + R2_t_test_stat{2} + R2_t_test_stat{3}) / 3;
 R2_t_test_mean(R2_t_test_mean < 0) = 0
+MAE_test_mean = (MAE_test_stat{1} + MAE_test_stat{2} + MAE_test_stat{3}) / 3;
+MAE_t_test_mean = (MAE_t_test_stat{1} + MAE_t_test_stat{2} + MAE_t_test_stat{3}) / 3;
 #}
