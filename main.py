@@ -142,8 +142,8 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-ind1 = 5
-ind2 = 23
+ind1 = 3
+ind2 = 7
 
 print("Прогнозируемый ряд:", names[ind1])
 print("Вспомогательный ряд:", names[ind2])
@@ -191,7 +191,9 @@ z = a * x1 + b * x2
 
 plt.plot(z, y, 'bo', alpha=0.5)
 # TODO: найти ординаты как средние значения
-plt.plot(np.hstack(([np.min(z)], d, [np.max(z)])), [-alpha, -alpha, 0, alpha, alpha], 'k', linewidth=3)
+#plt.plot(np.hstack(([np.min(z)], d, [np.max(z)])), [-alpha, -alpha, 0, alpha, alpha], 'k', linewidth=3)
+plt.plot([np.min(z), np.max(z)], [0.0, 0.0], 'g', linestyle='dashed')
+plt.plot([d[1], d[1]], [np.min(y), np.max(y)], 'r', linestyle='dashed')
 
 plt.xlabel("z(t)")
 plt.ylabel("x(t+1) - x(t)")
