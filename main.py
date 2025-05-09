@@ -155,13 +155,13 @@ x2 = data[:-1, ind2]
 y = data[1:, ind1] - data[:-1, ind1]
 
 
-"""
+print("Решающее дерево (глубина 2)...")
 clf = DecisionTreeClassifier(random_state=0, max_depth=2)
 clf.fit(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0))
 print("accuracy =", clf.score(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0)))
 plot_tree(clf, proportion=True)
 plt.show()
-"""
+
 
 
 y_bin = np.where(y > 0, 1, 0)
@@ -195,6 +195,7 @@ print(f"Модель: {coef_A} * [x <= {best_A}] + {coef_B} * [y <= {best_B}] + 
 #y_bin_pred = np.zeros(len(y_bin))
 #for i in range(len(y_bin)):
 y_bin_pred = model.predict(np.vstack((x1_bin, x2_bin)).T)
+#y_bin_pred = x1_bin  # baseline!
 print("accuracy =", accuracy_score(y_bin, y_bin_pred))
 cm = confusion_matrix(y_bin, y_bin_pred)
 tp = cm[1, 1]
@@ -254,6 +255,8 @@ plt.show()
 
 fig, ax = plt.subplots()
 ax.plot(years, data[:, ind1])
+cnt_g = 0
+cnt_r = 0
 for i, (xc, yc) in enumerate(zip(years[:-1], data[:-1, ind1])):
     if z[i] < d[0]:
         pred = '-'
@@ -268,10 +271,15 @@ for i, (xc, yc) in enumerate(zip(years[:-1], data[:-1, ind1])):
         pred = '+'
     if y[i] > 0 and pred == '-' or y[i] < 0 and pred == '+':
         color = 'r'
+        cnt_r += 1
     else:
         color = 'g'
+        cnt_g += 1
     ax.text(xc, yc, pred, fontsize=12, color=color)
 plt.show()
+
+print("accuracy =", cnt_g / (cnt_g + cnt_r))
+# TODO: какая будет точность, если найти a, b из линейной регрессии?
 
 # TODO: рассчитать вероятности отнесения к классам
 
