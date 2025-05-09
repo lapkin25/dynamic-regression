@@ -3,6 +3,7 @@ import numpy as np
 import math
 from scipy.optimize import minimize
 from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 import matplotlib.pyplot as plt
 
 
@@ -142,8 +143,8 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-ind1 = 3
-ind2 = 7
+ind1 = 0
+ind2 = 12
 
 print("Прогнозируемый ряд:", names[ind1])
 print("Вспомогательный ряд:", names[ind2])
@@ -152,6 +153,13 @@ x1 = data[:-1, ind1]
 x2 = data[:-1, ind2]
 y = data[1:, ind1] - data[:-1, ind1]
 
+"""
+clf = DecisionTreeClassifier(random_state=0, max_depth=3)
+clf.fit(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0))
+print("score =", clf.score(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0)))
+plot_tree(clf, proportion=True)
+plt.show()
+"""
 
 regr = LinearRegression()
 regr.fit(np.vstack((x1, x2)).T, y)
