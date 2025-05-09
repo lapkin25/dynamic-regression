@@ -142,9 +142,15 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-x1 = data[:-1, 0]
-x2 = data[:-1, 21]
-y = data[1:, 0] - data[:-1, 0]
+ind1 = 0
+ind2 = 21
+
+print("Прогнозируемый ряд:", names[ind1])
+print("Вспомогательный ряд:", names[ind2])
+
+x1 = data[:-1, ind1]
+x2 = data[:-1, ind2]
+y = data[1:, ind1] - data[:-1, ind1]
 
 
 regr = LinearRegression()
@@ -184,9 +190,28 @@ print(mat)
 z = a * x1 + b * x2
 
 plt.plot(z, y, 'bo', alpha=0.5)
+# TODO: найти ординаты как средние значения
 plt.plot(np.hstack(([np.min(z)], d, [np.max(z)])), [-alpha, -alpha, 0, alpha, alpha], 'k', linewidth=3)
 
 plt.xlabel("z(t)")
 plt.ylabel("x(t+1) - x(t)")
 plt.show()
 
+
+fig, ax = plt.subplots()
+ax.plot(years, data[:, ind1])
+for i, (xc, yc) in enumerate(zip(years[:-1], data[:-1, ind1])):
+    if z[i] < d[0]:
+        pred = '-'
+    elif z[i] < d[1]:
+        pred = '0'
+    else:
+        pred = '+'
+    if y[i] > 0 and pred == '-' or y[i] < 0 and pred == '+':
+        color = 'r'
+    else:
+        color = 'g'
+    ax.text(xc, yc, pred, fontsize=12, color=color)
+plt.show()
+
+# TODO: рассчитать вероятности отнесения к классам
