@@ -2,8 +2,9 @@ import csv
 import numpy as np
 import math
 from scipy.optimize import minimize
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, plot_tree
+from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
 import matplotlib.pyplot as plt
 
 
@@ -153,13 +154,56 @@ x1 = data[:-1, ind1]
 x2 = data[:-1, ind2]
 y = data[1:, ind1] - data[:-1, ind1]
 
+
 """
-clf = DecisionTreeClassifier(random_state=0, max_depth=3)
+clf = DecisionTreeClassifier(random_state=0, max_depth=2)
 clf.fit(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0))
-print("score =", clf.score(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0)))
+print("accuracy =", clf.score(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0)))
 plot_tree(clf, proportion=True)
 plt.show()
 """
+
+
+y_bin = np.where(y > 0, 1, 0)
+grid1 = np.linspace(np.min(x1), np.max(x1), 50, endpoint=False)
+grid2 = np.linspace(np.min(x2), np.max(x2), 50, endpoint=False)
+max_auc = 0.0
+best_A = None
+best_B = None
+print("Вычисляем оптимальные пороги...")
+for A in grid1:
+    for B in grid2:
+        x1_bin = np.where(x1 <= A, 1, 0)
+        x2_bin = np.where(x2 <= B, 1, 0)
+        model = LogisticRegression(max_iter=10000)
+        model.fit(np.vstack((x1_bin, x2_bin)).T, y_bin)
+        p = model.predict_proba(np.vstack((x1_bin, x2_bin)).T)[:, 1]
+        auc = roc_auc_score(y_bin, p)
+        if auc > max_auc:
+            max_auc = auc
+            best_A = A
+            best_B = B
+        #print(A, B, auc)
+print("max_auc =", max_auc)
+x1_bin = np.where(x1 <= best_A, 1, 0)
+x2_bin = np.where(x2 <= best_B, 1, 0)
+model = LogisticRegression(max_iter=10000)
+model.fit(np.vstack((x1_bin, x2_bin)).T, y_bin)
+coef_A = model.coef_.ravel()[0]
+coef_B = model.coef_.ravel()[1]
+print(f"Модель: {coef_A} * [x <= {best_A}] + {coef_B} * [y <= {best_B}] + {model.intercept_}")
+#y_bin_pred = np.zeros(len(y_bin))
+#for i in range(len(y_bin)):
+y_bin_pred = model.predict(np.vstack((x1_bin, x2_bin)).T)
+print("accuracy =", accuracy_score(y_bin, y_bin_pred))
+cm = confusion_matrix(y_bin, y_bin_pred)
+tp = cm[1, 1]
+tn = cm[0, 0]
+fp = cm[0, 1]
+fn = cm[1, 0]
+print("sensitivity =", tp / (tp + fn))
+print("specificity =", tn / (tn + fp))
+
 
 regr = LinearRegression()
 regr.fit(np.vstack((x1, x2)).T, y)
