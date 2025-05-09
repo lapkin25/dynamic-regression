@@ -144,8 +144,8 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-ind1 = 0
-ind2 = 12
+ind1 = 2
+ind2 = 6
 
 print("Прогнозируемый ряд:", names[ind1])
 print("Вспомогательный ряд:", names[ind2])
@@ -206,11 +206,33 @@ print("sensitivity =", tp / (tp + fn))
 print("specificity =", tn / (tn + fp))
 
 
+
 regr = LinearRegression()
 regr.fit(np.vstack((x1, x2)).T, y)
 a, b = regr.coef_
 z = a * x1 + b * x2
 d = np.array([np.min(z), (np.min(z) + np.max(z)) / 2, np.max(z)])
+
+# выбираем оптимальный порог для z - бинарная классификация
+grid = np.linspace(np.min(z), np.max(z), 100, endpoint=False)
+y_bin = np.where(y > 0, 1, 0)
+max_acc = 0.0
+best_cut = None
+for cut in grid:
+    y_pred = np.where(z <= cut, 0, 1)
+    acc = accuracy_score(y_bin, y_pred)
+    if acc > max_acc:
+        max_acc = acc
+        best_cut = cut
+print("accuracy (lin) =", max_acc, "при пороге z =", best_cut)
+
+plt.plot(z, y, 'bo', alpha=0.5)
+plt.plot([np.min(z), np.max(z)], [0.0, 0.0], 'g', linestyle='dashed')
+plt.plot([best_cut, best_cut], [np.min(y), np.max(y)], 'r', linestyle='dashed')
+plt.xlabel("z(t)")
+plt.ylabel("x(t+1) - x(t)")
+plt.show()
+
 
 
 #a = 0
