@@ -3,6 +3,7 @@ import numpy as np
 import math
 from scipy.optimize import minimize
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
 
 
 def read_data():
@@ -100,7 +101,8 @@ def obj_func(x1, x2, y, alpha, a, b, d):
     for i in range(n):
         for s in range(m):
             for p in range(m):
-                J += u[i, s] * mat[s, p] * math.log(mat[s, p])
+                if mat[s, p] > 0:
+                    J += u[i, s] * mat[s, p] * math.log(mat[s, p])
     J *= -(1 / n)
 
     return J, mat
@@ -122,7 +124,7 @@ def optimize_obj_func(x1, x2, y, alpha, a_init, b_init, d_init):
     def f(params):
         a = params[0]
         b = params[1]
-        d = params[2:]
+        d = np.sort(params[2:])
         J, _ = obj_func(x1, x2, y, alpha, a, b, d)
         return J
 
@@ -131,7 +133,7 @@ def optimize_obj_func(x1, x2, y, alpha, a_init, b_init, d_init):
     params = res.x
     a = params[0]
     b = params[1]
-    d = params[2:]
+    d = np.sort(params[2:])
     return a, b, d
 
 
@@ -173,7 +175,18 @@ print(J)
 print(mat)
 
 
+
 #print(years)
 #print(names)
 #print(data)
+
+
+z = a * x1 + b * x2
+
+plt.plot(z, y, 'bo', alpha=0.5)
+plt.plot(np.hstack(([np.min(z)], d, [np.max(z)])), [-alpha, -alpha, 0, alpha, alpha], 'k', linewidth=3)
+
+plt.xlabel("z(t)")
+plt.ylabel("x(t+1) - x(t)")
+plt.show()
 
