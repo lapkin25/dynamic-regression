@@ -144,8 +144,8 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-ind1 = 2
-ind2 = 6
+ind1 = 0
+ind2 = 12
 
 print("Прогнозируемый ряд:", names[ind1])
 print("Вспомогательный ряд:", names[ind2])
@@ -156,7 +156,7 @@ y = data[1:, ind1] - data[:-1, ind1]
 
 
 print("Решающее дерево (глубина 2)...")
-clf = DecisionTreeClassifier(random_state=0, max_depth=2)
+clf = DecisionTreeClassifier(random_state=0, max_depth=2)  #, criterion='entropy')
 clf.fit(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0))
 print("accuracy =", clf.score(np.vstack((x1, x2)).T, np.where(y > 0, 1, 0)))
 plot_tree(clf, proportion=True)
@@ -210,6 +210,7 @@ print("specificity =", tn / (tn + fp))
 regr = LinearRegression()
 regr.fit(np.vstack((x1, x2)).T, y)
 a, b = regr.coef_
+print("a =", a, "b =", b)
 z = a * x1 + b * x2
 d = np.array([np.min(z), (np.min(z) + np.max(z)) / 2, np.max(z)])
 
@@ -229,8 +230,9 @@ print("accuracy (lin) =", max_acc, "при пороге z =", best_cut)
 plt.plot(z, y, 'bo', alpha=0.5)
 plt.plot([np.min(z), np.max(z)], [0.0, 0.0], 'g', linestyle='dashed')
 plt.plot([best_cut, best_cut], [np.min(y), np.max(y)], 'r', linestyle='dashed')
-plt.xlabel("z(t)")
+plt.xlabel("ax(t) + by(t)")
 plt.ylabel("x(t+1) - x(t)")
+plt.savefig("1.png", dpi=300)
 plt.show()
 
 
@@ -297,7 +299,16 @@ for i, (xc, yc) in enumerate(zip(years[:-1], data[:-1, ind1])):
     else:
         color = 'g'
         cnt_g += 1
-    ax.text(xc, yc, pred, fontsize=12, color=color)
+    if pred == '+':
+        s = '+'
+    elif pred == '-':
+        s = '–'
+    else:
+        s = '0'
+    if color == 'r':
+        s += '!'
+    ax.text(xc, yc, s, fontsize=12, color=color)
+plt.savefig("2.png", dpi=300)
 plt.show()
 
 print("accuracy =", cnt_g / (cnt_g + cnt_r))
@@ -305,10 +316,11 @@ print("accuracy =", cnt_g / (cnt_g + cnt_r))
 
 # TODO: рассчитать вероятности отнесения к классам
 
+
 """
 print("Оптимизируем для разных пар рядов...")
 J_mat = np.zeros((len(names), len(names)))
-for ind1 in range(0, 6):
+for ind1 in list(range(0, 6)) + list(range(24, 26)):
     for ind2 in range(6, len(names)):
         print(names[ind1], "через", names[ind2], end='')
 
@@ -331,12 +343,16 @@ np.set_printoptions(linewidth=300)
 print(J_mat)
 """
 
+
 #ind1 = 0, ind2 = 12
 #ind1 = 1, ind2 = 19
 #ind1 = 2, ind2 = 6
 #ind1 = 3, ind2 = 7
 #ind1 = 4, ind2 = 20
 #ind1 = 5, ind2 = 22 (23)
+
+#ind1 = 24, ind2 = 21
+#ind1 = 25, ind2 = 20
 
 """
 alpha = 0.3
