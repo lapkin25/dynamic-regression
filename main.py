@@ -139,6 +139,96 @@ def optimize_obj_func(x1, x2, y, alpha, a_init, b_init, d_init):
     return a, b, d
 
 
+def obj_func_cat(x1, x2, y, alpha, d, q):
+    """
+    :param x1: первый ряд-предиктор
+    :param x2: второй ряд-предиктор
+    :param y: выходной признак
+    :param alpha: вертикальный центроид
+    :param d: центроиды для x1
+    :param q: центроиды для x2
+    :return: значение целевой функции (энтропия) + матрица соответствия
+    """
+    # число наблюдений
+    n = len(x1)
+    # число диапазонов признака x1
+    m1 = 3
+    # число диапазонов признака x2
+    m2 = 2
+    # число диапазонов выходного признака
+    m = 3
+
+    # центроиды диапазонов
+    horiz_centroids_1 = d
+    horiz_centroids_2 = q
+    vert_centroids = np.array([-alpha, 0, alpha])
+
+    # расчет мер принадлежности
+    u = np.zeros((n, m1))  # меры принадлежности диапазонам признака x1
+    v = np.zeros((n, m2))  # меры принадлежности диапазонам признака x2
+    w = np.zeros((n, m))  # меры принадлежности диапазонам выходного признака
+    for i in range(n):
+        for k in range(m1):
+            u[i, k] = membership(k, x1[i], horiz_centroids_1)
+    for i in range(n):
+        for k in range(m2):
+            v[i, k] = membership(k, x2[i], horiz_centroids_2)
+    for i in range(n):
+        for k in range(m):
+            w[i, k] = membership(k, y[i], vert_centroids)
+
+    # расчет матрицы соответствия
+    mat = np.zeros((m1, m2, m))
+    for s in range(m1):
+        for p in range(m2):
+            for r in range(m):
+                if np.sum(u[:, s] * v[:, p]) == 0:
+                    mat[s, p, r] = 1e10
+                else:
+                    mat[s, p, r] = np.sum(u[:, s] * v[:, p] * w[:, r]) / np.sum(u[:, s] * v[:, p])
+
+    # расчет целевой функции
+    J = 0.0
+    for i in range(n):
+        for s in range(m1):
+            for p in range(m2):
+                for r in range(m):
+                    if mat[s, p, r] == 1e10:
+                        J -= 1e10
+                    if mat[s, p, r] > 0:
+                        J += u[i, s] * v[i, p] * mat[s, p, r] * math.log(mat[s, p, r])
+    J *= -(1 / n)
+
+    return J, mat
+
+
+def optimize_obj_func_cat(x1, x2, y, alpha, d_init, q_init):
+    """
+    Оптимизация целевой функции
+    :param x1: первый ряд-предиктор
+    :param x2: второй ряд-предиктор
+    :param y: выходной признак
+    :param alpha: вертикальный центроид
+    :return: d, q
+    d - вектор центроидов признака x1
+    q - вектор центроидов признака x2
+    """
+
+    def f(params):
+        d = np.sort(params[:m1])
+        q = np.sort(params[m1:])
+        J, _ = obj_func_cat(x1, x2, y, alpha, d, q)
+        return J
+
+    m1 = len(d_init)
+    m2 = len(q_init)
+    params_init = np.hstack((d_init, q_init))
+    res = minimize(f, params_init, method='Nelder-Mead')
+    params = res.x
+    d = np.sort(params[:m1])
+    q = np.sort(params[m1:])
+    return d, q
+
 
 print("Чтение данных из файла...", end='')
 data, names, years = read_data()
@@ -315,6 +405,44 @@ print("accuracy =", cnt_g / (cnt_g + cnt_r))
 # TODO: какая будет точность, если найти a, b из линейной регрессии?
 
 # TODO: рассчитать вероятности отнесения к классам
+
+
+print("Второй нечеткий метод")
+
+d = np.array([np.min(x1), (np.min(x1) + np.max(x1)) / 2, np.max(x1)])
+q = np.array([(np.min(x2) + np.max(x2)) / 2, (np.min(x2) + np.max(x2)) / 2])
+
+J, mat = obj_func_cat(x1, x2, y, alpha, d, q)
+print(J)
+print(mat)
+
+print("Оптимизация...", end='')
+d, q = optimize_obj_func_cat(x1, x2, y, alpha, d, q)
+print(" Готово!")
+print("d =", d)
+print("q =", q)
+
+J, mat = obj_func_cat(x1, x2, y, alpha, d, q)
+print(J)
+print(mat)
+
+y_bin = np.where(y > 0, 1, 0)
+y_bin_pred = np.zeros_like(x1, dtype=int)
+for i in range(len(x1)):
+    pred_classes = np.zeros(3)
+    for s in range(3):
+        u = membership(s, x1[i], d)
+        for p in range(2):
+            v = membership(p, x2[i], q)
+            for r in range(3):
+                pred_classes[r] += u * v * mat[s, p, r]
+    #print(pred_classes)
+    if pred_classes[0] > pred_classes[2]:
+        y_bin_pred[i] = 0
+    else:
+        y_bin_pred[i] = 1
+acc = accuracy_score(y_bin, y_bin_pred)
+print("accuracy =", acc)
 
 
 """
