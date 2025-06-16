@@ -304,6 +304,15 @@ print("a =", a, "b =", b)
 z = a * x1 + b * x2
 d = np.array([np.min(z), (np.min(z) + np.max(z)) / 2, np.max(z)])
 
+
+y_bin = np.where(y > 0, 1, 0)
+log_reg = LogisticRegression()
+log_reg.fit(np.vstack((x1, x2)).T, y_bin)
+y_pred = log_reg.predict(np.vstack((x1, x2)).T)
+acc = accuracy_score(y_bin, y_pred)
+print("accuracy (log) =", acc)
+
+
 # выбираем оптимальный порог для z - бинарная классификация
 grid = np.linspace(np.min(z), np.max(z), 100, endpoint=False)
 y_bin = np.where(y > 0, 1, 0)
