@@ -31,10 +31,10 @@ def read_data():
 print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
-data = data[-20:, :]
-years = years[-20:]
+data = data[-16:, :]
+years = years[-16:]
 
-ind1 = 0
+ind1 = 4
 #ind2 = 7
 
 print("Прогнозируемый ряд:", names[ind1])
@@ -71,6 +71,11 @@ global_w_B = None
 global_w0_B = None
 best_ind2 = None
 for ind2 in range(6, 24):
+    #if "Интен" in names[ind2] or "Долг" in names[ind2]:
+    #    continue
+    #if names[ind2] != "МаксИнтенс_фев":
+    #    continue
+
     print("Вспомогательный ряд:", names[ind2])
     x2 = data[:-1, ind2]
 
@@ -108,7 +113,7 @@ for ind2 in range(6, 24):
         best_ind2 = ind2
         global_x2_threshold = x2_threshold
         global_w_A, global_w0_A, global_w_B, global_w0_B = best_w_A, best_w0_A, best_w_B, best_w0_B
-print("Наилучший вспомогательный ряд:", names[best_ind2])
+print("Наилучший вспомогательный ряд:", names[best_ind2], "; порог =", global_x2_threshold)
 x2 = data[:-1, best_ind2]
 plt.axline(xy1=(0, global_w0_A), slope=global_w_A, color='b')
 plt.axline(xy1=(0, global_w0_B), slope=global_w_B, color='r')
