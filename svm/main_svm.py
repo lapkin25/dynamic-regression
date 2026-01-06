@@ -33,8 +33,8 @@ def read_data():
 print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
-data = data[-25:, :]
-years = years[-25:]
+#data = data[-20:, :]
+#years = years[-20:]
 
 ind1 = 0
 #ind2 = 6
@@ -51,6 +51,7 @@ y = data[1:, ind1]
 # TODO: собрать точки (x1, y); предсказать метки класса через условие x2 > x2_threshold (SVC)
 # https://scikit-learn.org/stable/auto_examples/svm/plot_separating_hyperplane.html
 
+C1 = 1000
 best_ind2 = None
 global_mutual_information = -1.0
 global_x2_threshold = None
@@ -70,7 +71,7 @@ for ind2 in range(6, 24):
         if N1 == 0 or N0 == 0:
             continue
 
-        clf = svm.SVC(kernel="linear", probability=True, C=1000, random_state=42)
+        clf = svm.SVC(kernel="linear", probability=True, C=C1, random_state=42)
         clf.fit(X, Y)
 
         #print(X)
@@ -86,8 +87,8 @@ for ind2 in range(6, 24):
         P0 = np.mean(p[Y == 0, 0])  # вероятность правильного предсказания класса "0"
         #print(f"P1 = {P1}, P0 = {P0}")
 
-        P1_overall = np.mean(p[:, 1])
-        P0_overall = np.mean(p[:, 0])
+        P1_overall = np.mean(p[:, 1])  # P(X = 1)
+        P0_overall = np.mean(p[:, 0])  # P(X = 0)
 
         H_Y = - (N1 / N) * math.log(N1 / N) - (N0 / N) * math.log(N0 / N)
         H_X = - P1_overall * math.log(P1_overall) - P0_overall * math.log(P0_overall)
@@ -98,6 +99,22 @@ for ind2 in range(6, 24):
         H_X_cond_Y = (N1 / N) * H_X_cond_1 + (N0 / N) * H_X_cond_0
 
         mutual_information = H_X - H_X_cond_Y
+
+
+        def bin_entropy(p):
+            return - p * math.log(p) - (1 - p) * math.log(1 - p)
+
+        """
+        # проверка
+        H_Y_cond_X = P0_overall * bin_entropy((P0 * N0) / (P0 * N0 + (1 - P1) * N1)) + P1_overall * bin_entropy((P1 * N1) / (P1 * N1 + (1 - P0) * N0))
+        mutual_information1 = H_Y - H_Y_cond_X
+        print(mutual_information, mutual_information1)
+        """
+
+        # проверка с расстоянием К-Л
+        #mutual_information = - (H_Y + (N1 / N) * math.log(P1) + (N0 / N) * math.log(P0))
+
+
         #print("x2_th =", x2_th, "MI =", mutual_information)
         if mutual_information > max_mutual_information:
             max_mutual_information = mutual_information
@@ -116,7 +133,7 @@ print("Наилучший вспомогательный ряд:", names[best_in
 x2 = data[:-1, best_ind2]
 X = np.column_stack((x1, y))
 Y = np.where(x2 > global_x2_threshold, 1, 0)
-clf = svm.SVC(kernel="linear", probability=True, C=1000, random_state=42)
+clf = svm.SVC(kernel="linear", probability=True, C=C1, random_state=42)
 clf.fit(X, Y)
 plt.scatter(X[:, 0], X[:, 1], c=Y) #, s=30, cmap=plt.cm.Paired)
 ax = plt.gca()
