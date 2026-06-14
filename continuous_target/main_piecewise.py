@@ -73,7 +73,10 @@ class PiecewiseModel:
 
 def plot_model(x, y, c, a1, a2):
     plt.plot(x, y, 'o')
-    plt.xlabel("y(t)")
+    #plt.xlabel("y(t)")
+
+    plt.xlabel("x(t)")
+
     plt.ylabel("x(t+1) - x(t)")
     plt.plot([np.min(x), c], [a1 * (np.min(x) - c), 0], 'r')
     plt.plot([c, np.max(x)], [0, a2 * (np.max(x) - c)], 'r')
@@ -84,7 +87,7 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-ind1 = 5
+ind1 = 14
 
 print("Прогнозируемый ряд:", names[ind1])
 
@@ -93,19 +96,24 @@ print("Прогнозируемый ряд:", names[ind1])
 x1 = data[:-1, ind1]  # ряд x(t)
 y = data[1:, ind1]  # ряд x(t + 1)
 
-for ind2 in range(12, 15):
+#for ind2 in range(12, 15):
     #if names[ind2] != "АлеутДолгота_фев":
     #    continue
 
-    print("Вспомогательный ряд:", names[ind2])
-    x2 = data[:-1, ind2]  # ряд y(t)
+#print("Вспомогательный ряд:", names[ind2])
+#x2 = data[:-1, ind2]  # ряд y(t)
 
-    #X = np.column_stack((x1, x2))
-    model = PiecewiseModel()
-    model.fit(x2.reshape(-1, 1), y - x1)
-    print("   RMSE =", model.rmse)
-    print("   c =", model.c)
-    print("   a1 =", model.a1)
-    print("   a2 =", model.a2)
+#X = np.column_stack((x1, x2))
+model = PiecewiseModel()
+#model.fit(x2.reshape(-1, 1), y - x1)
 
-    plot_model(x2, y - x1, model.c, model.a1, model.a2)
+model.fit(x1.reshape(-1, 1), y - x1)
+
+print("   RMSE =", model.rmse)
+print("   c =", model.c)
+print("   a1 =", model.a1)
+print("   a2 =", model.a2)
+
+#plot_model(x2, y - x1, model.c, model.a1, model.a2)
+
+plot_model(x1, y - x1, model.c, model.a1, model.a2)
