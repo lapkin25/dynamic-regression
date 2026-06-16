@@ -136,8 +136,23 @@ class RulesModel:
         self.model = None
         self.p0 = p0
 
-    def plot(self):
-        pass
+    def plot(self, x, y):
+        x2_th = self.model.x2_th
+        y_th = 0.0
+        plt.plot(x1[x[:, 1] >= x2_th], y[x[:, 1] >= x2_th], 'ro', alpha=0.9)
+        plt.plot(x1[x[:, 1] < x2_th], y[x[:, 1] < x2_th], 'bo', alpha=0.9)
+
+        plt.xlabel("x(t)")
+        plt.ylabel("x(t+1) - x(t)")
+        ax = plt.gca()
+        ax.axline((np.min(x1), y_th), (np.max(x1), y_th), c='k')
+        for rule in self.model.model_red.rules:
+            x1_th = rule['x_th']
+            ax.axline((x1_th, np.min(y)), (x1_th, np.max(y)), c='r')
+        for rule in self.model.model_blue.rules:
+            x1_th = rule['x_th']
+            ax.axline((x1_th, np.min(y)), (x1_th, np.max(y)), c='b')
+        plt.show()
 
     def fit(self, x, y):
         assert(x.shape[1] == 2)
@@ -189,8 +204,4 @@ for ind2 in range(6, 24):
     X = np.column_stack((x1, x2))
     model = RulesModel(p0)
     model.fit(X, z)
-
-
-    #plot_model(x2, y - x1, model.c, model.a1, model.a2)
-
-    #plot_model(x1, y - x1, model.c, model.a1, model.a2)
+    model.plot(X, z)
