@@ -26,18 +26,65 @@ def read_data():
     return data.T, names, years
 
 
+# покрывает ли условие правила данную точку
+def rule_covers(rule, x_val):
+    return (rule['dir'] == '>' and x_val >= rule['x_th']) or (rule['dir'] == '<' and x_val <= rule['x_th'])
+
+
 class OneColorRulesModel:
     def __init__(self, p0):
         self.p0 = p0
+        self.rules = []
+
+    def extract_rules(self, y_val, x, y):
+        # правило вида x >= x_th
+        best_x_th = None
+        for x_th in np.linspace(np.min(x), np.max(x), 50):
+            if np.all(x < x_th):
+                continue
+            N1 = np.sum(y[x >= x_th])
+            N0 = np.sum(1 - y[x >= x_th])
+            if y_val == 1:
+                precision = N1 / (N1 + N0)
+            else:
+                precision = N0 / (N1 + N0)
+            if precision >= self.p0:
+                best_x_th = x_th
+                break
+        if best_x_th is not None:
+            rule = {'y_val': y_val, 'dir': '>', 'x_th': best_x_th}
+            self.rules.append(rule)
+
+        # правило вида x <= x_th
+        best_x_th = None
+        for x_th in np.linspace(np.min(x), np.max(x), 50)[::-1]:
+            if np.all(x > x_th):
+                continue
+            N1 = np.sum(y[x <= x_th])
+            N0 = np.sum(1 - y[x <= x_th])
+            if y_val == 1:
+                precision = N1 / (N1 + N0)
+            else:
+                precision = N0 / (N1 + N0)
+            if precision >= self.p0:
+                best_x_th = x_th
+                break
+        if best_x_th is not None:
+            rule = {'y_val': y_val, 'dir': '<', 'x_th': best_x_th}
+            self.rules.append(rule)
 
     # x - непрерывная переменная (одна координата)
     # y - бинарная переменная
     # извлекаем правило для прогноза y = 1 или y = 0 по значению x
     def fit(self, x, y):
-        pass
+        if len(x) == 0:
+            return
+        self.extract_rules(1, x, y)
+        self.extract_rules(0, x, y)
 
     def print_rules(self):
-        pass
+        for rule in self.rules:
+            print(f"x {rule['dir']} {rule['x_th']} => y = {rule['y_val']}")
 
 
 class TwoColorRulesModel:
@@ -70,9 +117,17 @@ class TwoColorRulesModel:
         self.model_red = model_red
         self.model_blue = model_blue
 
-    # какая доля (от 0 до 1) всех точек не покрыта правилами
-    def score(self):
-        pass
+    # какая доля (от 0 до 1) всех точек покрыта правилами
+    def score(self, x):
+        points_covered = 0
+        for i in range(len(x)):
+            val = x[i, 0]
+            color = (x[i, 1] >= self.x2_th)
+            if color == 1 and any([rule_covers(rule, val) for rule in self.model_red.rules]) or \
+                    color == 0 and any([rule_covers(rule, val) for rule in self.model_blue.rules]):
+                # точка покрыта правилами
+                points_covered += 1
+        return points_covered / len(x)
 
 
 class RulesModel:
@@ -94,7 +149,7 @@ class RulesModel:
         for y0 in np.linspace(np.min(x2), np.max(x2), 50):
             model = TwoColorRulesModel(p0, y0, 0.0)
             model.fit(x, y)
-            score = model.score()
+            score = model.score(x)
             if max_score is None or score > max_score:
                 max_score = score
                 best_y0 = y0
@@ -102,6 +157,11 @@ class RulesModel:
         self.y0 = best_y0
         self.model = best_model
 
+        print(max_score)
+        print(f"y(t) > {self.y0}:")
+        self.model.model_red.print_rules()
+        print(f"y(t) < {self.y0}:")
+        self.model.model_blue.print_rules()
 
 
 print("Чтение данных из файла...", end='')
