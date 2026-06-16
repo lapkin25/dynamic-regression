@@ -10,7 +10,7 @@ def read_data():
     names - названия рядов с данными
     data - матрица, где строки - это годы, столбцы - это ряды
     """
-    with open('winter.csv', newline='') as csvfile:
+    with open('cyclones_fareast.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         fields = next(reader)
         years = np.array(list(map(int, fields[1:])))
@@ -138,12 +138,13 @@ class RulesModel:
 
     def plot(self, x, y):
         x2_th = self.model.x2_th
-        y_th = 0.0
+        y_th = self.model.y_th
         plt.plot(x1[x[:, 1] >= x2_th], y[x[:, 1] >= x2_th], 'ro', alpha=0.9)
         plt.plot(x1[x[:, 1] < x2_th], y[x[:, 1] < x2_th], 'bo', alpha=0.9)
 
         plt.xlabel("x(t)")
-        plt.ylabel("x(t+1) - x(t)")
+        #plt.ylabel("x(t+1) - x(t)")
+        plt.ylabel("x(t+1)")
         ax = plt.gca()
         ax.axline((np.min(x1), y_th), (np.max(x1), y_th), c='k')
         for rule in self.model.model_red.rules:
@@ -162,7 +163,7 @@ class RulesModel:
         best_y0 = None
         best_model = None
         for y0 in np.linspace(np.min(x2), np.max(x2), 50):
-            model = TwoColorRulesModel(p0, y0, 0.0)
+            model = TwoColorRulesModel(self.p0, y0, np.mean(y))  #0.0)
             model.fit(x, y)
             score = model.score(x)
             if max_score is None or score > max_score:
@@ -172,7 +173,7 @@ class RulesModel:
         self.y0 = best_y0
         self.model = best_model
 
-        print(max_score)
+        print(f"Покрытие правилами = {max_score * 100} %")
         print(f"y(t) > {self.y0}:")
         self.model.model_red.print_rules()
         print(f"y(t) < {self.y0}:")
@@ -183,8 +184,8 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-p0 = 0.8
-ind1 = 1
+p0 = 0.75
+ind1 = 5
 
 print("Прогнозируемый ряд:", names[ind1])
 
@@ -192,9 +193,10 @@ print("Прогнозируемый ряд:", names[ind1])
 
 x1 = data[:-1, ind1]  # ряд x(t)
 y = data[1:, ind1]  # ряд x(t + 1)
-z = y - x1
+#z = y - x1
+z = y
 
-for ind2 in range(6, 24):
+for ind2 in range(12, 15):
     #if names[ind2] != "АлеутДолгота_фев":
     #    continue
 
