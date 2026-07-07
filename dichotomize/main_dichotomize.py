@@ -10,7 +10,7 @@ def read_data():
     names - названия рядов с данными
     data - матрица, где строки - это годы, столбцы - это ряды
     """
-    with open('winter.csv', newline='') as csvfile:
+    with open('../cyclones_fareast.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         fields = next(reader)
         years = np.array(list(map(int, fields[1:])))
@@ -134,7 +134,7 @@ print("Чтение данных из файла...", end='')
 data, names, years = read_data()
 print(" Прочитано")
 
-ind1 = 0
+ind1 = 4
 
 print("Прогнозируемый ряд:", names[ind1])
 
@@ -143,7 +143,7 @@ print("Прогнозируемый ряд:", names[ind1])
 x1 = data[:-1, ind1]  # ряд x(t)
 y = data[1:, ind1]  # ряд x(t + 1)
 
-for ind2 in range(6, 24):
+for ind2 in range(12, 15):
 #    if names[ind2] != "МаксШирота_янв":
 #        continue
 
@@ -158,4 +158,4 @@ for ind2 in range(6, 24):
     print("   порог y(t) =", model.x2_th)
     print("   порог x(t+1) =", model.y_th)
 
-#    plot_model(x1, x2, y, model.x1_th, model.x2_th, model.y_th)
+    plot_model(x1, x2, y, model.x1_th, model.x2_th, model.y_th)

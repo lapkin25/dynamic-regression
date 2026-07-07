@@ -10,7 +10,7 @@ def read_data():
     names - названия рядов с данными
     data - матрица, где строки - это годы, столбцы - это ряды
     """
-    with open('cyclones_fareast.csv', newline='') as csvfile:
+    with open('../cyclones_fareast.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         fields = next(reader)
         years = np.array(list(map(int, fields[1:])))
@@ -174,6 +174,7 @@ class RulesModel:
         self.model = best_model
 
         print(f"Покрытие правилами = {max_score * 100} %")
+        print("c =", np.mean(y))
         print(f"y(t) > {self.y0}:")
         self.model.model_red.print_rules()
         print(f"y(t) < {self.y0}:")
